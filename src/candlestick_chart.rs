@@ -237,9 +237,12 @@ impl StatefulWidget for CandleStickChart {
             };
 
             for (y, char) in rendered.iter().enumerate() {
-                buf[(area.x + x as u16 + y_axis_width + offset, area.y + y as u16)]
-                    .set_symbol(char)
-                    .set_style(Style::default().fg(color));
+                let Some(cell) =
+                    buf.cell_mut((area.x + x as u16 + y_axis_width + offset, area.y + y as u16))
+                else {
+                    continue;
+                };
+                cell.set_symbol(char).set_style(Style::default().fg(color));
             }
             prev_timestamp = candle.timestamp;
         }
