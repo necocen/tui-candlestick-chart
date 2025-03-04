@@ -128,7 +128,7 @@ async fn binance_btc_usdt_perp_agg_trade(candles: Rc<RefCell<BTreeMap<i64, Candl
         let response = connection.next().await.unwrap().unwrap();
         let ws::Frame::Text(bytes) = response else {
             if let ws::Frame::Ping(_) = response {
-                let _ = connection
+                connection
                     .send(ws::Message::Pong(([0x0A].as_slice()).into()))
                     .await
                     .unwrap();
@@ -136,7 +136,7 @@ async fn binance_btc_usdt_perp_agg_trade(candles: Rc<RefCell<BTreeMap<i64, Candl
             continue;
         };
         let json: serde_json::Value =
-            serde_json::from_str(&std::str::from_utf8(&bytes.to_vec()).unwrap()).unwrap();
+            serde_json::from_str(std::str::from_utf8(&bytes).unwrap()).unwrap();
 
         let t = json["T"].as_i64().unwrap() / 60_000 * 60_000;
         let p = OrderedFloat::from(json["p"].as_str().unwrap().parse::<f64>().unwrap());
@@ -169,7 +169,7 @@ async fn binance_btc_usdt_perp_klines(
         .await
         .unwrap();
     let json: serde_json::Value =
-        serde_json::from_str(&std::str::from_utf8(&bytes.to_vec()).unwrap()).unwrap();
+        serde_json::from_str(std::str::from_utf8(&bytes).unwrap()).unwrap();
 
     let mut candles = candles.borrow_mut();
     for kline in json.as_array().unwrap() {
@@ -203,5 +203,5 @@ fn ui(f: &mut Frame, app: &mut App) {
                 .offset_from_utc_date(&Utc::now().naive_utc().date())
                 .fix(),
         );
-    f.render_stateful_widget(chart, f.size(), &mut app.state);
+    f.render_stateful_widget(chart, f.area(), &mut app.state);
 }
